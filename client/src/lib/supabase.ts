@@ -1,4 +1,5 @@
 import type {
+  JobListItem,
   JobRow,
   SegmentRow,
   SourceType,
@@ -112,6 +113,71 @@ export async function getJobById(jobId: string): Promise<JobRow | null> {
     `transcription_jobs?${query.toString()}`,
   );
   return rows[0] ?? null;
+}
+
+export async function markJobFailed(
+  jobId: string,
+  errorMessage: string,
+): Promise<void> {
+  const query = new URLSearchParams({
+    id: `eq.${jobId}`,
+  });
+
+  await supabaseFetch<unknown>(`transcription_jobs?${query.toString()}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      status: "failed",
+      error_message: errorMessage,
+      finished_at: new Date().toISOString(),
+    }),
+  });
+}
+
+type JobListRawRow = JobRow & {
+  videos:
+    | {
+        source_url: string;
+        source_type: SourceType;
+        title: string | null;
+        duration_sec: number | null;
+      }
+    | null;
+  transcript_documents:
+    | Array<{
+        summary: string | null;
+        updated_at: string;
+      }>
+    | null;
+};
+
+export async function listRecentJobs(limit = 50): Promise<JobListItem[]> {
+  const query = new URLSearchParams({
+    select:
+      "id,status,provider,model_name,language,error_message,created_at,started_at,finished_at,videos:videos!transcription_jobs_video_id_fkey(source_url,source_type,title,duration_sec),transcript_documents(summary,updated_at)",
+    order: "created_at.desc",
+    limit: String(limit),
+  });
+
+  const rows = await supabaseFetch<JobListRawRow[]>(
+    `transcription_jobs?${query.toString()}`,
+  );
+
+  return rows.map((row) => ({
+    jobId: row.id,
+    status: row.status,
+    provider: row.provider,
+    modelName: row.model_name,
+    language: row.language,
+    errorMessage: row.error_message,
+    createdAt: row.created_at,
+    startedAt: row.started_at,
+    finishedAt: row.finished_at,
+    videoUrl: row.videos?.source_url ?? "",
+    sourceType: row.videos?.source_type ?? "other",
+    videoTitle: row.videos?.title ?? null,
+    durationSec: row.videos?.duration_sec ?? null,
+    summary: row.transcript_documents?.[0]?.summary ?? null,
+  }));
 }
 
 export async function getSegmentsByJobId(jobId: string): Promise<SegmentRow[]> {

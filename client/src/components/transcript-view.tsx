@@ -70,7 +70,7 @@ export function TranscriptView({ data }: { data: TranscriptPayload }) {
             </button>
           </div>
         </div>
-        <p className="whitespace-pre-wrap text-sm leading-6 text-zinc-800">{renderedText}</p>
+        <p className="whitespace-pre-wrap text-sm leading-6 text-white">{renderedText}</p>
       </div>
 
       <div className="rounded-md border border-zinc-200 p-4">

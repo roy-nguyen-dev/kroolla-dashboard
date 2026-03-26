@@ -6,6 +6,11 @@ const ALLOWED_VIDEO_HOSTS = new Set([
   "youtu.be",
   "vimeo.com",
   "www.vimeo.com",
+  "tiktok.com",
+  "www.tiktok.com",
+  "m.tiktok.com",
+  "vm.tiktok.com",
+  "vt.tiktok.com",
 ]);
 
 export const createJobSchema = z.object({

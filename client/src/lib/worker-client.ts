@@ -34,8 +34,7 @@ export async function triggerWorkerJob(input: {
       });
 
       if (!response.ok) {
-        const body = await response.text();
-        throw new Error(`Worker trigger failed (${response.status}): ${body}`);
+        throw new Error(`Worker trigger failed (${response.status}).`);
       }
 
       return;

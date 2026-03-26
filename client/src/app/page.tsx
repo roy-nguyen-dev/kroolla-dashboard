@@ -9,12 +9,20 @@ export default function Home() {
           Submit a video URL and track transcription progress in real time.
         </p>
         <div className="mt-6">
-          <Link
-            href="/submit"
-            className="inline-flex rounded-md bg-zinc-900 px-4 py-2 text-white"
-          >
-            Start now
-          </Link>
+          <div className="flex gap-3">
+            <Link
+              href="/submit"
+              className="inline-flex rounded-md bg-zinc-900 px-4 py-2 text-white"
+            >
+              Start now
+            </Link>
+            <Link
+              href="/jobs"
+              className="inline-flex rounded-md border border-zinc-300 bg-zinc-900 px-4 py-2 text-white"
+            >
+              View jobs
+            </Link>
+          </div>
         </div>
       </main>
     </div>

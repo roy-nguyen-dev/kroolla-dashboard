@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type JobStatusPayload = {
   jobId: string;
@@ -18,24 +18,31 @@ type JobStatusPayload = {
 export function JobStatus({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<JobStatusPayload | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const fetchStatus = useCallback(async () => {
-    const response = await fetch(`/api/jobs/${jobId}`, { cache: "no-store" });
-    const data = (await response.json()) as JobStatusPayload & { error?: string };
-
-    if (!response.ok) {
-      throw new Error(data.error ?? "Failed to fetch job.");
-    }
-    setJob(data);
-  }, [jobId]);
+  const isTerminal = job?.status === "completed" || job?.status === "failed";
 
   useEffect(() => {
+    if (isTerminal) {
+      return;
+    }
+
     let interval: ReturnType<typeof setInterval> | null = null;
     let cancelled = false;
 
     async function run() {
       try {
-        await fetchStatus();
+        const response = await fetch(`/api/jobs/${jobId}`, { cache: "no-store" });
+        const data = (await response.json()) as JobStatusPayload & { error?: string };
+
+        if (!response.ok) {
+          throw new Error(data.error ?? "Failed to fetch job.");
+        }
+
+        if (!cancelled) {
+          setJob(data);
+          if (data.status === "completed" || data.status === "failed") {
+            if (interval) clearInterval(interval);
+          }
+        }
       } catch (statusError) {
         if (!cancelled) {
           setError(
@@ -54,7 +61,7 @@ export function JobStatus({ jobId }: { jobId: string }) {
       cancelled = true;
       if (interval) clearInterval(interval);
     };
-  }, [fetchStatus]);
+  }, [isTerminal, jobId]);
 
   const badgeClass = useMemo(() => {
     const status = job?.status;

@@ -44,3 +44,20 @@ export type TranscriptDocumentRow = {
   updated_at: string;
 };
 
+export type JobListItem = {
+  jobId: string;
+  status: JobStatus;
+  provider: string;
+  modelName: string;
+  language: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+  startedAt: string | null;
+  finishedAt: string | null;
+  videoUrl: string;
+  sourceType: SourceType;
+  videoTitle: string | null;
+  durationSec: number | null;
+  summary: string | null;
+};
+

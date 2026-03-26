@@ -5,11 +5,26 @@ import {
   createVideo,
   findLatestActiveJobByVideo,
   findVideoByUrl,
+  listRecentJobs,
+  markJobFailed,
 } from "@/lib/supabase";
 import { inferSourceType, isAllowedVideoUrl } from "@/lib/validators";
 import { triggerWorkerJob } from "@/lib/worker-client";
 
 export const runtime = "nodejs";
+
+export async function GET() {
+  try {
+    const jobs = await listRecentJobs(100);
+    return NextResponse.json({ jobs });
+  } catch (error) {
+    console.error("GET /api/jobs failed", error);
+    return NextResponse.json(
+      { error: "Unable to fetch jobs list." },
+      { status: 500 },
+    );
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -51,10 +66,23 @@ export async function POST(request: Request) {
         sourceType,
       });
     } catch (workerError) {
+      const workerErrorMessage =
+        workerError instanceof Error ? workerError.message : "Unknown worker error.";
+
+      await markJobFailed(
+        job.id,
+        `Worker trigger failed: ${workerErrorMessage}`.slice(0, 1000),
+      );
+
       console.error("Failed to trigger worker", {
         jobId: job.id,
         error: workerError,
       });
+
+      return NextResponse.json(
+        { error: "Unable to start transcription worker. Please resubmit." },
+        { status: 502 },
+      );
     }
 
     return NextResponse.json({
